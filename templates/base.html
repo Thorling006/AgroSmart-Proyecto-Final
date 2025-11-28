@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgroSmart</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/modern_agro.css">
+    <link rel="icon" href="/static/favicon.ico">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <style>
+        .notification-bubble {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #ff4757;
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid" style="display:flex;align-items:center;justify-content:space-between;">
+            <a class="navbar-brand" href="/dashboard"><span class="icon-agro">🌱</span>AgroSmart</a>
+            <div style="display:flex;align-items:center;gap:1rem;">
+                <a href="{% url 'ia_chat' %}" class="btn btn-agro" style="background:#6f42c1;color:#fff;font-weight:bold;box-shadow:0 2px 8px #6f42c133;">🤖 IA</a>
+                {% if request.user.is_authenticated %}
+                    <a href="{% url 'chat_list' %}" class="btn btn-agro chat-notification" style="background:#ff6b6b;color:#fff;font-weight:bold;position:relative;">
+                        💬 Chat
+                        <span id="notificationBadge" class="notification-bubble" style="display:none;">0</span>
+                    </a>
+                    <a href="{% url 'dashboard' %}" class="btn btn-agro">🏠 Dashboard</a>
+                    <a href="{% url 'crop_create' %}" class="btn btn-agro">➕ Registrar nuevo cultivo</a>
+                {% endif %}
+                {% if request.user.email == 'root@gmail.com' %}
+                    <a href="{% url 'admin_panel' %}" class="btn btn-agro" style="background:#198754;color:#fff;font-weight:bold;">🛠️ Panel Admin</a>
+                    <a href="{% url 'crop_list' %}" class="btn btn-agro">🌱 Cultivos</a>
+                    <a href="{% url 'download_my_crops_pdf' %}" class="btn btn-agro">📄 PDF cultivos</a>
+                {% endif %}
+
+                <a href="{% url 'about_page' %}" class="btn btn-agro" style="background:#0d6efd;color:#fff;font-weight:bold;">ℹ️ Acerca de</a>
+                <a href="{% url 'contact_page' %}" class="btn btn-agro" style="background:#198754;color:#fff;font-weight:bold;">✉️ Contáctenos</a>
+                <a href="{% url 'moon_calendar' %}" class="btn btn-agro" style="background:#333;color:#fff;font-weight:bold;box-shadow:0 2px 8px #3333;">🌙 Calendario Lunar</a>
+                {% if request.user.is_authenticated %}
+                    <a href="{% url 'logout' %}" class="btn btn-agro" style="background:#dc3545;color:#fff;font-weight:bold;margin-left:8px;">⏻ Cerrar sesión</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+    <div class="container mt-4">
+        {% block content %}{% endblock %}
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Actualizar notificación de mensajes no leídos cada 3 segundos
+        {% if request.user.is_authenticated %}
+        setInterval(async () => {
+            try {
+                const response = await fetch('/api/chat/no-leidos/');
+                const data = await response.json();
+                const badge = document.getElementById('notificationBadge');
+                
+                if (data.unread_count > 0) {
+                    badge.textContent = data.unread_count;
+                    badge.style.display = 'flex';
+                } else {
+                    badge.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error fetching unread count:', error);
+            }
+        }, 3000);
+        
+        // Primera ejecución al cargar
+        window.addEventListener('load', async () => {
+            try {
+                const response = await fetch('/api/chat/no-leidos/');
+                const data = await response.json();
+                const badge = document.getElementById('notificationBadge');
+                
+                if (data.unread_count > 0) {
+                    badge.textContent = data.unread_count;
+                    badge.style.display = 'flex';
+                }
+            } catch (error) {
+                console.error('Error fetching unread count:', error);
+            }
+        });
+        {% endif %}
+    </script>
+</div>
+</html>
