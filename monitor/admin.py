@@ -22,5 +22,5 @@ class ChatMessageAdmin(admin.ModelAdmin):
     list_display = ("sender", "recipient", "created_at", "is_read")
     list_filter = ("created_at", "is_read", "sender", "recipient")
     search_fields = ("message", "sender__email", "recipient__email")
-    readonly_fields = ("created_at", "read_at")
+    readonly_fields = ("created_at",)
     ordering = ("-created_at",)
